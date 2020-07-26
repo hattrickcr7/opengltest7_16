@@ -1,0 +1,7 @@
+[
+{
+  "directory": "/home/alex/sjtu/opengltest7_16/build",
+  "command": "/bin/clang++-10    -g   -std=gnu++14 -o CMakeFiles/opengltest7_16.dir/main.cpp.o -c /home/alex/sjtu/opengltest7_16/main.cpp",
+  "file": "/home/alex/sjtu/opengltest7_16/main.cpp"
+}
+]

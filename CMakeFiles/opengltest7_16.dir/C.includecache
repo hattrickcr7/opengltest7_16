@@ -1,0 +1,24 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/alex/sjtu/opengltest7_16/src/glad.c
+stdio.h
+-
+stdlib.h
+-
+string.h
+-
+glad.h
+-
+windows.h
+-
+winapifamily.h
+-
+dlfcn.h
+-
+

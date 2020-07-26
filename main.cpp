@@ -1,81 +1,234 @@
-#include <GLUT/glut.h>
+/*
+ * Test multisampling and polygon smoothing.
+ *
+ * Brian Paul
+ * 4 November 2002
+ */
+
+#include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include <glew.h>
+#include <GL/glut.h>
 
 
-constexpr  double TWO_PI = 6.2831853;
+static GLfloat Zrot = 0;
+static GLboolean Anim = GL_TRUE;
+static GLboolean HaveMultisample = GL_TRUE;
+static GLboolean DoMultisample = GL_TRUE;
 
-GLsizei winWidth = 400, winHeight = 400;
-GLuint regHex;
 
-class screenPt{
-private:
-    GLint x, y;
-public:
-    screenPt(){
-        x = y = 0;
-    }
-
-    void setCoords(GLint xCoord, GLint yCoord){
-        x = xCoord;
-        y = yCoord;
-    }
-
-    GLint getx() const {
-        return x;
-    }
-
-    GLint gety() const {
-        return y;
-    }
-};
-
-static void init (void){
-    screenPt hexVertex, circCtr;
-    GLdouble theta;
-    GLint k;
-
-    circCtr.setCoords(winWidth / 2, winHeight / 2);
-
-    glClearColor(1.0,1.0,1.0,1.0);
-
-    regHex = glGenLists(1);
-    glNewList(regHex,GL_COMPILE);
-        glColor3f(1.0,0.0,0.0);
-        glBegin(GL_POLYGON);
-            for (int i = 0; i < 6; ++i) {
-                theta=TWO_PI*i/6.0;
-                hexVertex.setCoords(circCtr.getx()+150*cos(theta),circCtr.gety()+150*sin(theta));
-                glVertex2i(hexVertex.gety(),hexVertex.gety());
-            }
-        glEnd();
-    glEndList();
+static void
+PrintString(const char *s)
+{
+   while (*s) {
+      glutBitmapCharacter(GLUT_BITMAP_8_BY_13, (int) *s);
+      s++;
+   }
 }
 
-void regHexgon(void ){
-    glClear(GL_COLOR_BUFFER_BIT);
-    glCallList(regHex);
-    glFlush();
+
+static void
+Polygon( GLint verts, GLfloat radius, GLfloat z )
+{
+   int i;
+   for (i = 0; i < verts; i++) {
+      float a = (i * 2.0 * 3.14159) / verts;
+      float x = radius * cos(a);
+      float y = radius * sin(a);
+      glVertex3f(x, y, z);
+   }
 }
 
-void winReshapeFcn(int newWidth,int newHeight){
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    gluOrtho2D(0.0,(GLdouble) newWidth,0.0,(GLdouble)newHeight);
-    glClear(GL_COLOR_BUFFER_BIT);
+
+static void
+DrawObject( void )
+{
+   glLineWidth(3.0);
+   glColor3f(1, 1, 1);
+   glBegin(GL_LINE_LOOP);
+   Polygon(12, 1.2, 0);
+   glEnd();
+
+   glLineWidth(1.0);
+   glColor3f(1, 1, 1);
+   glBegin(GL_LINE_LOOP);
+   Polygon(12, 1.1, 0);
+   glEnd();
+
+   glColor3f(1, 0, 0);
+   glBegin(GL_POLYGON);
+   Polygon(12, 0.4, 0.3);
+   glEnd();
+
+   glColor3f(0, 1, 0);
+   glBegin(GL_POLYGON);
+   Polygon(12, 0.6, 0.2);
+   glEnd();
+
+   glColor3f(0, 0, 1);
+   glBegin(GL_POLYGON);
+   Polygon(12, 0.8, 0.1);
+   glEnd();
+
+   glColor3f(1, 1, 1);
+   glBegin(GL_POLYGON);
+   Polygon(12, 1.0, 0);
+   glEnd();
 }
 
-int main(int argc,char** argv){
-    glutInit(&argc,argv);
-    glutInitDisplayMode(GLUT_SINGLE|GLUT_RGB);
-    glutInitWindowPosition(100,100);
-    glutInitWindowSize(winWidth,winHeight);
-    glutCreateWindow("Reshape-Function & Display-List Example");
 
-    init();
-    glutDisplayFunc(regHexgon);
-    glutReshapeFunc(winReshapeFcn);
+static void
+Display( void )
+{
+   glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
-    glutMainLoop();
+   glColor3f(1, 1, 1);
+   if (HaveMultisample) {
+      glRasterPos2f(-3.1, -1.6);
+      if (DoMultisample)
+         PrintString("MULTISAMPLE");
+      else
+         PrintString("MULTISAMPLE (off)");
+   }
+   glRasterPos2f(-0.8, -1.6);
+   PrintString("No antialiasing");
+   glRasterPos2f(1.6, -1.6);
+   PrintString("GL_POLYGON_SMOOTH");
+
+   /* multisample */
+   if (HaveMultisample) {
+      glEnable(GL_DEPTH_TEST);
+      if (DoMultisample)
+         glEnable(GL_MULTISAMPLE_ARB);
+      glPushMatrix();
+      glTranslatef(-2.5, 0, 0);
+      glPushMatrix();
+      glRotatef(Zrot, 0, 0, 1);
+      DrawObject();
+      glPopMatrix();
+      glPopMatrix();
+      glDisable(GL_MULTISAMPLE_ARB);
+      glDisable(GL_DEPTH_TEST);
+   }
+
+   /* non-aa */
+   glEnable(GL_DEPTH_TEST);
+   glPushMatrix();
+   glTranslatef(0, 0, 0);
+   glPushMatrix();
+   glRotatef(Zrot, 0, 0, 1);
+   DrawObject();
+   glPopMatrix();
+   glPopMatrix();
+   glDisable(GL_DEPTH_TEST);
+
+   /* polygon smooth */
+   glEnable(GL_POLYGON_SMOOTH);
+   glEnable(GL_LINE_SMOOTH);
+   glEnable(GL_BLEND);
+   glPushMatrix();
+   glTranslatef(2.5, 0, 0);
+   glPushMatrix();
+   glRotatef(Zrot, 0, 0, 1);
+   DrawObject();
+   glPopMatrix();
+   glPopMatrix();
+   glDisable(GL_LINE_SMOOTH);
+   glDisable(GL_POLYGON_SMOOTH);
+   glDisable(GL_BLEND);
+
+   glutSwapBuffers();
+}
+
+
+static void
+Reshape( int width, int height )
+{
+   GLfloat ar = (float) width / (float) height;
+   glViewport( 0, 0, width, height );
+   glMatrixMode( GL_PROJECTION );
+   glLoadIdentity();
+   glOrtho(-2.0*ar, 2.0*ar, -2.0, 2.0, -1.0, 1.0);
+   glMatrixMode( GL_MODELVIEW );
+   glLoadIdentity();
+}
+
+
+static void
+Idle( void )
+{
+   Zrot = 0.01 * glutGet(GLUT_ELAPSED_TIME);
+   glutPostRedisplay();
+}
+
+
+static void
+Key( unsigned char key, int x, int y )
+{
+   const GLfloat step = 1.0;
+   (void) x;
+   (void) y;
+   switch (key) {
+      case 'a':
+         Anim = !Anim;
+         if (Anim)
+            glutIdleFunc(Idle);
+         else
+            glutIdleFunc(NULL);
+         break;
+      case 'm':
+         DoMultisample = !DoMultisample;
+         break;
+      case 'z':
+         Zrot = (int) (Zrot - step);
+         break;
+      case 'Z':
+         Zrot = (int) (Zrot + step);
+         break;
+      case 27:
+         exit(0);
+         break;
+   }
+   glutPostRedisplay();
+}
+
+
+static void
+Init( void )
+{
+   /* GLUT imposes the four samples/pixel requirement */
+   int s;
+   glGetIntegerv(GL_SAMPLES_ARB, &s);
+   if (!glutExtensionSupported("GL_ARB_multisample") || s < 1) {
+      printf("Warning: multisample antialiasing not supported.\n");
+      HaveMultisample = GL_FALSE;
+   }
+   printf("GL_RENDERER = %s\n", (char *) glGetString(GL_RENDERER));
+   printf("GL_SAMPLES_ARB = %d\n", s);
+
+   glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+   glBlendFunc(GL_SRC_ALPHA_SATURATE, GL_ONE);
+
+   glGetIntegerv(GL_MULTISAMPLE_ARB, &s);
+   printf("GL_MULTISAMPLE_ARB = %d\n", s);
+}
+
+
+int main( int argc, char *argv[] )
+{
+   glutInit( &argc, argv );
+   glutInitWindowPosition( 0, 0 );
+   glutInitWindowSize( 600, 300 );
+   glutInitDisplayMode( GLUT_RGB | GLUT_ALPHA | GLUT_DOUBLE |
+                        GLUT_DEPTH | GLUT_MULTISAMPLE );
+   glutCreateWindow(argv[0]);
+   glutReshapeFunc( Reshape );
+   glutKeyboardFunc( Key );
+   glutDisplayFunc( Display );
+   if (Anim)
+      glutIdleFunc( Idle );
+   Init();
+   glutMainLoop();
+   return 0;
 }

@@ -1,0 +1,3 @@
+/home/alex/sjtu/opengltest7_16/CMakeFiles/rebuild_cache.dir
+/home/alex/sjtu/opengltest7_16/CMakeFiles/edit_cache.dir
+/home/alex/sjtu/opengltest7_16/CMakeFiles/opengltest7_16.dir

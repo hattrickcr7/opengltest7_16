@@ -3,21 +3,16 @@ project(opengltest7_16)
 
 set(CMAKE_CXX_STANDARD 14)
 
-set(GLEW_H /usr/local/Cellar/glew/2.1.0/include/GL)
-set(GLFW_H /usr/local/Cellar/glfw/3.3/include/GLFW)
-set(GLAD_H /usr/local/include/glad)
-set(KH_H /usr/local/include/KHR)
-#set(GLT_H /usr/local/include)
-include_directories(${GLEW_H} ${GLFW_H} ${GLAD_H} ${KH_H})
+set(GLT_H /usr/include)
+include_directories(${GLT_H})
 
 # 添加目标链接
-set(GLEW_LINK /usr/local/Cellar/glew/2.1.0/lib/libGLEW.2.1.dylib)
-set(GLFW_LINK /usr/local/Cellar/glfw/3.3/lib/libglfw.3.dylib)
-link_libraries(${OPENGL} ${GLEW_LINK} ${GLFW_LINK})
+
+link_libraries(${OPENGL})
 
 # 执行编译命令
 # 这个glad.c在第2步中说过要拉到项目中，注意路径
-set(SOURCE_FILES "src/glad.c" "main.cpp" src/Shader.h src/Shader.cpp src/7_24_A.cpp)
+set(SOURCE_FILES "main.cpp")
 add_executable(opengltest7_16 ${SOURCE_FILES})
 
 # mac下这步很重要
